@@ -77,6 +77,35 @@ def exportar_asientos_a_csv(nombre_archivo='asientos.csv'):
     except Exception as e:
         print(f"Error al exportar asientos: {e}")
         return False
+    
+
+def exportar_reservas_a_csv(nombre_archivo='reservas.csv'):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+        
+        # Consultar las reservas
+        cur.execute("SELECT * FROM reservas;")
+        reservas = cur.fetchall()
+        
+        # Obtener los nombres de las columnas
+        cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='reservas';")
+        columnas = [col[0] for col in cur.fetchall()]
+        
+        # Escribir a CSV
+        with open(nombre_archivo, 'w', newline='') as archivo:
+            writer = csv.writer(archivo)
+            writer.writerow(columnas)  # Escribir encabezados
+            writer.writerows(reservas)  # Escribir datos
+        
+        print(f"Datos de reservas exportados a {nombre_archivo}")
+        
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error al exportar reservas: {e}")
+        return False
 
 
 def intentar_reservar(id_asiento, usuario, nivel_aislamiento):
