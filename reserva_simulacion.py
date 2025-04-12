@@ -1,6 +1,9 @@
 import psycopg2
 import threading
 import time
+import csv
+import os
+from datetime import datetime
 
 # Configuración de conexión (debes ingresar tus datos)
 DB_CONFIG = {
@@ -17,6 +20,34 @@ NIVELES = {
     'repeatable_read': psycopg2.extensions.ISOLATION_LEVEL_REPEATABLE_READ,
     'serializable': psycopg2.extensions.ISOLATION_LEVEL_SERIALIZABLE
 }
+
+def exportar_eventos_a_csv(nombre_archivo='eventos.csv'):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+        
+        # Consultar los eventos
+        cur.execute("SELECT * FROM eventos;")
+        eventos = cur.fetchall()
+        
+        # Obtener los nombres de las columnas
+        cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='eventos';")
+        columnas = [col[0] for col in cur.fetchall()]
+        
+        # Escribir a CSV
+        with open(nombre_archivo, 'w', newline='') as archivo:
+            writer = csv.writer(archivo)
+            writer.writerow(columnas)  # Escribir encabezados
+            writer.writerows(eventos)  # Escribir datos
+        
+        print(f"Datos de eventos exportados a {nombre_archivo}")
+        
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error al exportar eventos: {e}")
+        return False
 
 def intentar_reservar(id_asiento, usuario, nivel_aislamiento):
     try:
